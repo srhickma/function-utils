@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/function-utils.iml" filepath="$PROJECT_DIR$/.idea/modules/function-utils.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/function-utils_main.iml" filepath="$PROJECT_DIR$/.idea/modules/function-utils_main.iml" group="function-utils" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/function-utils_test.iml" filepath="$PROJECT_DIR$/.idea/modules/function-utils_test.iml" group="function-utils" />
+      <module fileurl="file://$PROJECT_DIR$/function-utils.iml" filepath="$PROJECT_DIR$/function-utils.iml" />
     </modules>
   </component>
 </project>
