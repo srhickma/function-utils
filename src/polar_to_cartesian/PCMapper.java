@@ -6,18 +6,18 @@ import java.util.List;
 public class PCMapper {
 
     public static CartesianFunction map(PolarFunction pf){
-        System.out.println(">>STARTING_CONVERSION");
-        System.out.println(String.format("f=%s << Converting Polar Function To Cartesian Coordinates", pf));
+        System.out.println("\n>>STARTING_CONVERSION");
+        System.out.println(String.format(">>Converting Polar Function To Cartesian Coordinates--->> %s", pf));
         int n = pf.getK();
         CiSTerm[] cisTerms = getComplexExpansion(n);
-        System.out.println(String.format("f=%s << Expanded And Simplified By DMT", printExpanded(pf.getI(), pf.getJ(), cisTerms)));
+        System.out.println(String.format(">>Expanded And Simplified By DMT----------------------->> %s", printExpanded(pf.getI(), pf.getJ(), cisTerms)));
         XYTerm[] xyTerms = getCartesianExpansion(cisTerms);
         Fraction newJ = pf.getJ();
         newJ.subtract(new Fraction(pf.getK(), 1));
-        System.out.println(String.format("f=%s << Applied Map {z->z, pcos(ϕ)->x, psin(ϕ)->y}", printExpanded(pf.getI(), newJ, xyTerms)));
+        System.out.println(String.format(">>Applied Map {z->z, pcos(ϕ)->x, psin(ϕ)->y}----------->> %s", printExpanded(pf.getI(), newJ, xyTerms)));
         newJ.multiplyBy(new Fraction(1, 2));
         CartesianFunction cf = new CartesianFunction(pf.getI(), newJ, xyTerms);
-        System.out.println(String.format("f=%s << Applied Map {p->(x^2+y^2)^(1/2)}", cf));
+        System.out.println(String.format(">>Applied Map {p->(x^2+y^2)^(1/2)}--------------------->> %s", cf));
         System.out.println(">>CONVERSION_FINISHED");
         return cf;
     }
