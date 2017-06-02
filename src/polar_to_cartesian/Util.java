@@ -50,21 +50,30 @@ public class Util {
         if(b == 0 || b == a){
             return 1;
         }
-        return scopeFactorial(a, a - b + 1) / scopeFactorial(b, 1);
+        return scopedFactorial(a, a - b + 1, b);
     }
 
-    static long scopeFactorial(long a, long b){
+    static long scopedFactorial(long a, long b, long c){
         long prod = 1;
         if(a < b){
             long temp = a;
             a = b;
             b = temp;
         }
+        long divisor = c;
         for(long i = b; i <= a; i ++){
             prod *= i;
+            if(divisor > 1 && prod % divisor == 0){
+                prod /= divisor;
+                divisor --;
+            }
+        }
+        while(divisor > 1){
+            prod /= divisor;
+            divisor --;
         }
         if(prod < 0){
-            throw new RuntimeException("Long Overflow Occurred");
+            throw new RuntimeException("Long Overflow Occurred, Chose A Smaller Value For K");
         }
         return prod;
     }
