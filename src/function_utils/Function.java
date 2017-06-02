@@ -1,6 +1,5 @@
 package function_utils;
 
-import java.util.Map;
 import java.util.Vector;
 
 public class Function {
@@ -30,6 +29,7 @@ public class Function {
         for(String s : termStrings){
             terms.add(new Term(s));
         }
+        expand();
     }
 
     Function(Vector<Term> terms){
@@ -92,8 +92,59 @@ public class Function {
         }
     }
 
+    void setPower(int power){
+        this.power = power;
+    }
+
+    int getPower(){
+        return power;
+    }
+
     private boolean distributive(){
         return advancedFunction == AdvancedFunction.NONE && power == 1;
+    }
+
+    public boolean multipleOf(Function f){
+        if(terms.size() > 1){ //TODO only works if f is only one term, need to implement factoring otherwise
+            //there is no coefficient so they must be equal
+            if(equals(f)){
+                return true;
+            }
+            for(Term t : terms){
+                if(!t.multipleOf(f)){
+                    return false;
+                }
+            }
+            return true;
+        }
+        Term term = terms.get(0);
+        if(f.terms.size() > 1){
+            //need to check that f is equal to a multiplier of this
+            for(Function fx : term.getMultipliers()){
+                if(fx.equals(f)){
+                    return true;
+                }
+            }
+            return false;
+        }
+        //Both functions only have one term
+        Term fterm = f.terms.get(0);
+        for(Function fx : fterm.getMultipliers()){
+            boolean found = false;
+            for(Function fy : term.getMultipliers()){
+                if(fx.equals(fy)){
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                return false;
+            }
+        }
+        if(fterm.isVariable() && term.isVariable() && fterm.getVarName() != term.getVarName()){
+            return false;
+        }
+        return term.getConstant() % fterm.getConstant() == 0 && term.getConstant() >= fterm.getConstant();
     }
 
     public boolean equals(Function f){
@@ -124,11 +175,81 @@ public class Function {
         return true;
     }
 
-    public Function sub(Map<Character, Integer> valmap){
-        return sub(valmap, true);
+    public boolean equalsVoidPower(Function f){
+        if(terms.size() != f.terms.size() || advancedFunction != f.advancedFunction){
+            return false;
+        }
+        if(terms.size() == 1 && f.terms.size() == 1){
+            Term t1 = terms.get(0);
+            Term t2 = f.terms.get(0);
+            if(t1.getMultipliers().size() == 0 && t2.getMultipliers().size() == 0){
+                return t1.getVarName() == t2.getVarName() && t1.getConstant() == t2.getConstant();
+            }
+        }
+        expand();
+        f.expand();
+        for(Term t1 : terms){
+            boolean found = false;
+            for(Term t2 : f.terms){
+                if(t1.isEquivalent(t2)){
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                return false;
+            }
+        }
+        return true;
     }
 
-    Function sub(Map<Character, Integer> valmap, boolean topCall){
+    public Function sub(Substitution... map){
+        return sub(true, map);
+    }
+
+    Function sub(boolean topCall, Substitution... map){
+        Function newFunction = new Function(toString());
+        for(Term t : newFunction.terms){
+            for(Substitution s : map){
+
+                if(t.containsAndRemove(s)){
+                    System.out.println(String.format("Replacing %s with %s", t.toString(), s.getTo().toString()));
+                }
+
+            /*if(multipleOf(s.getFrom())){
+                System.out.println(String.format("Replacing %s with %s", toString(), s.getTo().toString()));
+                return s.getTo();
+            }*/
+            }
+        }
+        /*if(terms.size() == 1 && terms.get(0).getMultipliers().size() == 0){
+            return this;
+        }
+        Function newFunc = new Function();
+        for(Term t : terms){
+            newFunc.addTerm(t.sub(map));
+            System.out.println("");
+        }
+        System.out.println();
+        newFunc.power = power;
+        newFunc.advancedFunction = advancedFunction;
+        if(topCall){
+            newFunc.expand();
+        }
+        return newFunc;*/
+        //return new Function("");
+        return newFunction;
+    }
+
+    /*public Function subVariable(Map<Character, Integer> valmap){
+        return subVariable(valmap, true);
+    }
+
+    public Function subSimple(Map<Function, Function> fmap){
+        return subSimple(fmap, true);
+    }
+
+    Function subVariable(Map<Character, Integer> valmap, boolean topCall){
         Function newFunc = new Function();
         for(Term t : terms){
             newFunc.addTerm(t.sub(valmap));
@@ -138,6 +259,22 @@ public class Function {
         }
         return newFunc;
     }
+
+    Function subSimple(Map<Function, Function> fmap, boolean topCall){
+        for(Function f : fmap.keySet()){
+            if(equals(f)){
+                return fmap.get(f);
+            }
+        }
+        Function newFunc = new Function();
+        for (Term t : terms) {
+            newFunc.addTerm(t.subSimple(fmap));
+        }
+        if (topCall) {
+            newFunc.expand();
+        }
+        return newFunc;
+    }*/
 
     @Override
     public String toString(){

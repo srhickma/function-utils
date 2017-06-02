@@ -128,10 +128,18 @@ public class Term {
     }
 
     void addMultipliers(Vector<Function> ms){
-        multipliers.addAll(ms);
+        for(Function m : ms){
+            addMultiplier(m);
+        }
     }
 
     void addMultiplier(Function m){
+        for(Function f : multipliers){
+            if(f.multipleOf(m)){
+                f.setPower(f.getPower() + m.getPower());
+                return;
+            }
+        }
         multipliers.add(m);
     }
 
@@ -151,7 +159,11 @@ public class Term {
         return varName;
     }
 
-    Term sub(Map<Character, Integer> valmap){
+    boolean isVariable(){
+        return var;
+    }
+
+    /*Term sub(Map<Character, Integer> valmap){
         if(var){
             if(valmap.containsKey(varName)){
                 return new Term(getConstant() * valmap.get(varName));
@@ -170,6 +182,41 @@ public class Term {
             }
             return new Term(constant, newMultipliers.toArray(new Function[newMultipliers.size()]));
         }
+    }*/
+
+    public boolean multipleOf(Function f){
+        if(f.getTerms().size() > 1){
+            //need to check that f is equal to a multiplier of this
+            for(Function fx : multipliers){
+                if(fx.equals(f)){
+                    return true;
+                }
+            }
+            return false;
+        }
+        //Both functions only have one term
+        Term fterm = f.getTerms().get(0);
+        for(Function fx : fterm.multipliers){
+            boolean found = false;
+            for(Function fy : multipliers){
+                if(fx.equals(fy)){
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                return false;
+            }
+        }
+        return constant % fterm.constant == 0 && constant >= fterm.constant;
+    }
+
+    Term sub(Substitution... map){
+        Vector<Function> newMultipliers = new Vector<>();
+        for(Function f : getMultipliers()){
+            newMultipliers.add(f.sub(false, map));
+        }
+        return new Term(constant, newMultipliers.toArray(new Function[newMultipliers.size()]));
     }
 
     @Override
@@ -232,6 +279,87 @@ public class Term {
         product.addMultipliers(t1.getMultipliers());
         product.addMultipliers(t2.getMultipliers());
         return product;
+    }
+
+    void multiplyBy(Term t){
+        constant = constant * t.constant;
+        if(var && t.var){
+            addMultiplier(new Function(Character.toString(varName)));
+            addMultiplier(new Function(Character.toString(t.varName)));
+            var = false;
+            varName = ' ';
+        }
+        else if(var){
+            if(t.multipliers.size() == 0){
+                return;
+            }
+            addMultiplier(new Function(Character.toString(varName)));
+            var = false;
+            varName = ' ';
+        }
+        else if(t.var){
+            if(multipliers.size() == 0){
+                var = true;
+                varName = t.varName;
+                return;
+            }
+            addMultiplier(new Function(Character.toString(t.varName)));
+        }
+        addMultipliers(t.getMultipliers());
+    }
+
+    boolean containsAndRemove(Substitution s){
+        Term from = s.getFrom();
+        int maxPowerMult = -1;
+        if(constant % from.constant != 0){
+            return false;
+        }
+        int newConstant = constant / from.constant;
+        Vector<Function> newMults = new Vector<>();
+        for(Function f1 : from.multipliers){
+            boolean found = false;
+            for(Function f2 : multipliers){
+                if(f1.equalsVoidPower(f2) && f2.getPower() >= f1.getPower()){
+                    found = true;
+                    int newPower = f2.getPower() - f1.getPower();
+                    int powerMult = f2.getPower() / f1.getPower();
+                    if(powerMult < maxPowerMult || maxPowerMult < 0){
+                        maxPowerMult = powerMult;
+                    }
+                    if(newPower > 0){
+                        Function newMult = new Function(f2.toString());
+                        newMult.setPower(newPower);
+                        newMults.add(newMult);
+                    }
+                    break;
+                }
+            }
+            if(!found){
+                return false;
+            }
+        }
+        for(Function f2 : multipliers){
+            boolean found = false;
+            for(Function f1 : from.multipliers){
+                if(f1.equalsVoidPower(f2) && f2.getPower() >= f1.getPower()){
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                newMults.add(f2);
+            }
+        }
+        constant = newConstant;
+        //for(int i = 0){
+        //
+        //}
+        multipliers = newMults;
+        System.out.println("Multiplying " + toString() + " by " + s.getTo().toString());
+        for(int i = 0; i < maxPowerMult; i ++){
+            multiplyBy(s.getTo());
+        }
+        return true;
     }
 
 }
